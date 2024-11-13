@@ -36,5 +36,7 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-terraform.lock.hcl
-linux_amd64
+.terraform.lock.hcl
+/linux_amd64/
+
+.gitignore
