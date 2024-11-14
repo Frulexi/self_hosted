@@ -1,6 +1,5 @@
 variable "host_path" {
   type = string 
-  default = "/home/afruendly/self_hosted1/data"
   description = "default path to data folder "
 }
 
