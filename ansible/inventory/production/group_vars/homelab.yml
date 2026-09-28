@@ -52,4 +52,6 @@ docker_service_networks:
   - authentik_network
   - snipe-it_network
   - homepage_network
+  - immich_network
+  - actualbudget_network
 

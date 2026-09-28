@@ -64,6 +64,8 @@ This repository mirrors an enterprise GitOps workflow: system baselines are enfo
     ├── homepage/                      # Centralized service dashboard
     ├── snipe-it/                      # IT Asset Management (ITAM) platform
     ├── monitoring/                    # Observability (Prometheus, Grafana, Alloy, Loki)
+    ├── immich/                        # Self-hosted photo & video backup cloud
+    ├── actualbudget/                  # Privacy-focused envelope budgeting suite
     └── twingate/                      # Zero-trust remote access connector
 ```
 
@@ -75,6 +77,8 @@ Each service in the `services/` directory is self-contained with its own `docker
 
 - 🌐 **Traefik v3**: Cloud-native reverse proxy handling HTTPS termination, automatic SSL/TLS certificate generation via Cloudflare DNS challenge, and dynamic routing to internal container networks.
 - 🔐 **Authentik**: Enterprise-grade Identity and Access Management (IAM) provider enabling Single Sign-On (SSO), OAuth2, and multi-factor authentication for self-hosted apps.
+- 📸 **Immich**: High-performance, self-hosted photo and video backup solution with mobile sync, machine learning face recognition, and album management.
+- 💰 **Actual Budget**: Local-first, privacy-focused personal finance and envelope budgeting application with end-to-end encryption.
 - 📊 **Monitoring Stack**: Complete observability suite featuring **Prometheus** for metrics scraping, **Grafana** for visualizations, **Grafana Alloy** for telemetry, and **Loki** for centralized log collection.
 - 📦 **Snipe-IT**: IT Asset Management system used to track physical hardware, network devices, accessories, and maintenance lifecycles.
 - 🧭 **Homepage**: Modern, responsive dashboard displaying real-time system metrics, container statuses, and quick navigation links.
