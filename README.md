@@ -1,5 +1,8 @@
 # Enterprise Homelab & Microservices Orchestration with Ansible
 
+> [!NOTE]
+> **Public Demo & Reference Blueprint**: This repository is a sanitized public showcase and reference template illustrating my Ansible and Docker Compose infrastructure-as-code patterns. It contains template configurations, sample container stacks, and placeholder variables. It is **not** my live production homelab repository, and contains no live credentials, active internal subnets, or private network secrets.
+
 A production-grade homelab repository automating operating system hardening, Docker daemon provisioning, and containerized microservice deployments using **Ansible** and **Docker Compose**.
 
 This repository mirrors an enterprise GitOps workflow: system baselines are enforced declaratively, secrets are isolated via Ansible Vault, and containerized services are dynamically discovered and orchestrated with zero downtime.
