@@ -1,119 +1,133 @@
-# Enterprise-Grade Self-Hosted Infrastructure & Staging Lab
+# Enterprise Homelab & Microservices Orchestration with Ansible
 
-This repository showcases the Infrastructure-as-Code (IaC) blueprints and container orchestration configurations that power my 24/7 dedicated production and staging homelab. It serves as a sandbox for testing deployment reproducibility, automation pipelines, and robust zero-trust security layers before migrating services to live staging environments.
+A production-grade homelab repository automating operating system hardening, Docker daemon provisioning, and containerized microservice deployments using **Ansible** and **Docker Compose**.
+
+This repository mirrors an enterprise GitOps workflow: system baselines are enforced declaratively, secrets are isolated via Ansible Vault, and containerized services are dynamically discovered and orchestrated with zero downtime.
 
 ---
 
-## 🗺️ Architectural Overview
-
-My hybrid-cloud homelab combines physical hardware virtualization, enterprise-level network segmentation, and modern containerized orchestration into a resilient, high-uptime system.
+## 🏛️ Architecture & Workflow
 
 ```
-                   [ Edge Security / Gateway ]
-                                │
-               [ UniFi Cloud Gateway Ultra (UCG) ]
-                 - VLAN 10: Trusted Devices
-                 - VLAN 20: Isolated Lab & Staging
-                 - VLAN 30: Restricted IoT
-                                │
-         ┌──────────────────────┴──────────────────────┐
-         ▼                                             ▼
-  [ Twingate SDP ]                            [ Cloudflare Tunnel ]
-  (Secure remote access)                      (Zero-Trust web access)
-         │                                             │
-         └──────────────────────┬──────────────────────┘
-                                ▼
-                       [ Proxmox VE Node ]
-                                │
-         ┌──────────────────────┴──────────────────────┐
-         ▼                                             ▼
-  [ LXC Containers ]                            [ Ubuntu VM (prod-vm) ]
-   - Snipe-IT ITAM                              - Docker Engine
-   - Home Assistant                              - Portainer CE
-                                                 - NGINX Proxy Manager
-                                                 - Nextcloud Stack
+                        [ Ansible Control Node ]
+                                   │
+                  ┌────────────────┴────────────────┐
+                  ▼                                 ▼
+         [ Security Hardening ]             [ Docker Engine ]
+          - Non-standard SSH Port            - JSON Logging & Max Size
+          - Key-only Auth / No Root          - Shared Bridge Networks
+          - Stateful UFW Firewall            - Persistent Data Dirs
+          - Fail2ban Intrusion Defense       - Systemd Service Tuning
+                  │                                 │
+                  └────────────────┬────────────────┘
+                                   ▼
+                   [ Automated Service Deployment ]
+                  (Scans services/ directory tree)
+                                   │
+      ┌──────────────┬─────────────┼─────────────┬──────────────┐
+      ▼              ▼             ▼             ▼              ▼
+ [ Traefik ]   [ Authentik ]  [ Homepage ]  [ Snipe-IT ]  [ Monitoring ]
+  Reverse Proxy  IAM / SSO     Application    IT Asset      Grafana, Alloy,
+  & Auto-SSL     Provider      Dashboard      Management    Prometheus, Loki
 ```
 
 ---
 
-## 🛠️ Infrastructure Stack
+## 📂 Repository Structure
 
-### 1. Bare-Metal Hypervisor (Proxmox VE)
-- **Virtualization Core**: Running Proxmox VE to host specialized Virtual Machines (VMs) and lightweight, high-performance Linux Containers (LXCs). This allows for full resource allocation control and rapid environment cloning.
-- **Orchestration**: System updates, template provisioning, and package installations are managed via declarative **Ansible Playbooks** with credential encryption managed via **Ansible Vault**.
-
-### 2. Network Engineering & Zero-Trust Security
-- **Physical Gateway**: Powered by a **UniFi Cloud Gateway Ultra (UCG-Ultra)** managing multiple isolated VLAN subnets with stateful firewall rules to enforce least-privilege traffic flow.
-- **Access Control**: No public inbound ports are exposed.
-  - **Twingate Software-Defined Perimeter (SDP)**: Provides secure, encrypted peer-to-peer tunnels directly to private management endpoints for administrators.
-  - **Cloudflare Tunnels**: Proxies secure public HTTP traffic to selected public-facing microservices with automated edge-level DDoS protection.
-
-### 3. Declarative Container Staging Stack (Terraform Managed)
-This repository contains the **Terraform** configuration (`main.tf`) that automates the deployment of our core Docker microservices stack:
-
-- 🔖 **Flame**: A minimal, fast, and centralized homepage dashboard for single-pane-of-glass access to self-hosted web applications.
-- 🛡️ **NGINX Proxy Manager**: A reverse proxy that handles incoming traffic routing, automated Let's Encrypt SSL/TLS certificate acquisition and renewal, and custom header injections.
-- ☁️ **Nextcloud**: A high-performance, private cloud file-sharing and collaboration platform.
-- 🗄️ **MariaDB**: A hardened relational database service configured specifically to back the Nextcloud application with optimized transaction logs.
-- ⚙️ **Portainer CE**: A lightweight web-based console enabling GUI management and real-time telemetry monitoring for local Docker containers.
+```
+.
+├── ansible/
+│   ├── ansible.cfg                    # Global Ansible defaults and vault configuration
+│   ├── group_vars/
+│   │   └── all.yml                    # Global security and Docker baseline variables
+│   ├── inventory/
+│   │   ├── production/                # Production host inventory and environment overrides
+│   │   │   ├── hosts.ini
+│   │   │   └── group_vars/
+│   │   │       ├── homelab.yml
+│   │   │       └── all/vault.yml      # Encrypted credentials (template provided)
+│   │   └── staging/                   # Staging environment inventory
+│   ├── playbooks/
+│   │   ├── hardening.yml              # Applies security baseline (SSH, UFW, Fail2ban)
+│   │   ├── docker-setup.yml           # Installs and configures Docker engine
+│   │   └── deploy-services.yml        # Deploys container stacks and manages lifecycles
+│   └── roles/
+│       ├── security/                  # OS hardening and intrusion prevention role
+│       ├── docker/                    # Docker installation, storage, and daemon tuning
+│       ├── docker_service/            # Auto-discovers and deploys compose projects
+│       └── docker-cleanup/            # Prunes stale images, orphan volumes, and cache
+│
+└── services/                          # Selected containerized services
+    ├── traefik/                       # Edge reverse proxy with automated SSL
+    ├── authentik/                     # Identity and access management (SSO)
+    ├── homepage/                      # Centralized service dashboard
+    ├── snipe-it/                      # IT Asset Management (ITAM) platform
+    ├── monitoring/                    # Observability (Prometheus, Grafana, Alloy, Loki)
+    └── twingate/                      # Zero-trust remote access connector
+```
 
 ---
 
-## 🚀 Local Deployment Guide
+## 🛡️ Featured Services
 
-### Prerequisites
-- [Terraform CLI (v1.0+)](https://developer.hashicorp.com/terraform/downloads)
-- [Docker Engine (v20.10+)](https://docs.docker.com/engine/install/)
-- Docker daemon accessible to your local user shell.
+Each service in the `services/` directory is self-contained with its own `docker-compose.yml`, optional configuration directories, and `.env.example` templates:
 
-### 1. Configuration Setup
-Create a private `terraform.tfvars` file in the root of this directory. This file is automatically ignored by Git (per `.gitignore`) to ensure your secrets never leak.
+- 🌐 **Traefik v3**: Cloud-native reverse proxy handling HTTPS termination, automatic SSL/TLS certificate generation via Cloudflare DNS challenge, and dynamic routing to internal container networks.
+- 🔐 **Authentik**: Enterprise-grade Identity and Access Management (IAM) provider enabling Single Sign-On (SSO), OAuth2, and multi-factor authentication for self-hosted apps.
+- 📊 **Monitoring Stack**: Complete observability suite featuring **Prometheus** for metrics scraping, **Grafana** for visualizations, **Grafana Alloy** for telemetry, and **Loki** for centralized log collection.
+- 📦 **Snipe-IT**: IT Asset Management system used to track physical hardware, network devices, accessories, and maintenance lifecycles.
+- 🧭 **Homepage**: Modern, responsive dashboard displaying real-time system metrics, container statuses, and quick navigation links.
+- 🔒 **Twingate**: Zero Trust Software-Defined Perimeter (SDP) connector enabling encrypted, direct remote administrative access without exposing open firewall ports.
 
-```hcl
-# Example terraform.tfvars template
-host_path      = "/opt/homelab/storage"  # Root directory on your host for persistent volume mounts
-admin_user     = "sys_admin"             # Default administrator username for Nextcloud and Database
-admin_password = "your-secure-password"  # Main administrator password
-root_password  = "your-root-db-password" # Hardened MariaDB root database password
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- **Ansible Core (v2.14+)** on the control machine.
+- Target host running **Ubuntu Server (22.04 / 24.04 LTS)** or **Debian (12 Bookworm)**.
+- SSH key-based access to the target host.
+
+### 2. Configure Inventory & Variables
+Edit the target host in `ansible/inventory/production/hosts.ini`:
+
+```ini
+[homelab]
+prod-vm1 ansible_host=192.168.1.100 ansible_port=1022
+
+[homelab:vars]
+ansible_user=admin
+ansible_ssh_private_key_file=~/.ssh/id_ed25519
 ```
 
-### 2. Initialization & Execution
-Initialize the provider plugins and apply the infrastructure configuration:
+### 3. Setup Secrets with Ansible Vault
+A sanitized template is provided at `ansible/inventory/production/group_vars/all/vault.yml`. Add your credentials and encrypt the file:
 
 ```bash
-# Initialize Terraform
-terraform init
+# Encrypt your vault file
+ansible-vault encrypt ansible/inventory/production/group_vars/all/vault.yml
 
-# Validate the syntax of the config files
-terraform validate
-
-# Plan and preview the actions Terraform will perform
-terraform plan
-
-# Apply the configurations and spin up the containers
-terraform apply
+# Or create a vault password file (~/.vault_pass.txt) and reference it in ansible.cfg
 ```
 
-*Confirm the action by typing `yes` when prompted.*
+### 4. Execute Playbooks
 
-### 3. Exited / Running Ports
-Once deployed, services will be bound to the following local container-mode interfaces:
-- **Flame Dashboard**: `http://localhost:5005`
-- **Nextcloud Portal**: `http://localhost:5080`
-- **NGINX Admin Console**: `http://localhost:81`
-- **Portainer Dashboard**: `http://localhost:801` (HTTPS available on `9443`)
+```bash
+# Step 1: Apply security hardening baseline (SSH, UFW, Fail2ban)
+ansible-playbook ansible/playbooks/hardening.yml
 
----
+# Step 2: Install and configure Docker Engine
+ansible-playbook ansible/playbooks/docker-setup.yml
 
-## 🔒 Security & Secrets Hardening
-
-- **Docker Socket Isolation**: The Docker socket (`/var/run/docker.sock`) is mounted only into containers requiring cluster-level event metrics (Flame, Portainer) under strict access rules.
-- **Sensitive Variables**: All critical passwords, API secrets, and storage paths are declared as variables with `sensitive = true` in `variables.tf`, preventing them from displaying in standard console outputs or logs.
-- **Persistent Volumes**: All container data is externalized using defined Docker volumes and centralized host mounts to simplify scheduled offline backups and state preservation.
+# Step 3: Discover and deploy all services
+ansible-playbook ansible/playbooks/deploy-services.yml
+```
 
 ---
 
-## 📈 Future Staging Plans
+## 🔒 Security Best Practices
 
-- 📊 **Monitoring Architecture**: Integrating Prometheus, cAdvisor, and Grafana to capture node-level and container-level system metrics (CPU, Memory, Network).
-- 🪵 **Log Management**: Setting up a centralized syslog/ELK stack (Elasticsearch, Logstash, Kibana) for proactive audit logs and authentication monitoring.
+- **Zero Open Ports**: All external web access routes through encrypted Cloudflare Tunnels and Twingate SDP. No inbound firewall ports are opened to the public internet.
+- **Strict Network Isolation**: Distinct Docker bridge networks (`traefik_network`, `monitoring_network`, `authentik_network`, etc.) isolate container communication and prevent cross-stack lateral movement.
+- **Version-Controlled Sanitization**: All real secrets, certificates, and IP addresses are completely isolated via `.gitignore` and managed using encrypted Ansible Vault entries.

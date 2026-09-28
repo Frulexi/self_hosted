@@ -1,0 +1,119 @@
+services:
+  alloy:
+    image: grafana/alloy:v1.19.2
+    container_name: alloy
+    restart: unless-stopped
+    hostname: prod-vm1
+    volumes:
+      - ./config/config.alloy:/etc/alloy/config.alloy
+      - alloy-data:/var/lib/alloy/data
+      - /:/rootfs:ro
+      - /sys:/sys:ro
+      - /run:/run:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/:/var/lib/docker/:ro
+      - /run/udev/data:/run/udev/data:ro
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    labels:
+      com.homelab.service: "alloy"
+      com.homelab.maintainer: "homelab"
+      traefik.enable: "true"
+      traefik.http.routers.alloy.entrypoints: "websecure"
+      traefik.http.routers.alloy.tls.certresolver: "cloudflare"
+      traefik.http.routers.alloy.rule: "Host(`alloy.prod.yourdomain.com`)"
+      traefik.http.services.alloy.loadbalancer.server.port: "12345"
+      homepage.name: "Alloy"
+      homepage.description: "Grafana Alloy log and metrics collector"
+      homepage.icon: "alloy.png"
+      homepage.group: "Monitoring"
+      homepage.href: "https://alloy.prod.yourdomain.com"
+    networks:
+      - monitoring_network
+      - traefik_network
+
+  grafana:
+    image: grafana/grafana-oss:12.4.3
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SERVER_ROOT_URL=https://grafana.prod.yourdomain.com
+      - GF_SERVER_DOMAIN=grafana.prod.yourdomain.com
+      - GF_AUTH_GENERIC_OAUTH_SKIP_ORG_ROLE_SYNC=true
+      - GF_USERS_AUTO_ASSIGN_ORG_ROLE=Admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/provisioning:/etc/grafana/provisioning
+    labels:
+      com.homelab.service: "grafana"
+      com.homelab.maintainer: "homelab"
+      traefik.enable: "true"
+      traefik.http.routers.grafana.entrypoints: "websecure"
+      traefik.http.routers.grafana.tls.certresolver: "cloudflare"
+      traefik.http.routers.grafana.rule: "Host(`grafana.prod.yourdomain.com`)"
+      traefik.http.services.grafana.loadbalancer.server.port: "3000"
+      homepage.name: "Grafana"
+      homepage.description: "Observability dashboards"
+      homepage.icon: "grafana.png"
+      homepage.group: "Monitoring"
+      homepage.href: "https://grafana.prod.yourdomain.com"
+    networks:
+      - monitoring_network
+      - traefik_network
+
+  loki:
+    image: grafana/loki:3.7.8
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - 3100:3100
+    volumes:
+      - ./config/config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring_network
+
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - 9090:9090
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-remote-write-receiver"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    labels:
+      com.homelab.service: "prometheus"
+      com.homelab.maintainer: "homelab"
+      traefik.enable: "true"
+      traefik.http.routers.prometheus.entrypoints: "websecure"
+      traefik.http.routers.prometheus.tls.certresolver: "cloudflare"
+      traefik.http.routers.prometheus.rule: "Host(`prometheus.prod.yourdomain.com`)"
+      traefik.http.services.prometheus.loadbalancer.server.port: "9090"
+      homepage.name: "Prometheus"
+      homepage.description: "Metrics collection and alerting"
+      homepage.icon: "prometheus.png"
+      homepage.group: "Monitoring"
+      homepage.href: "https://prometheus.prod.yourdomain.com"
+    networks:
+      - monitoring_network
+      - traefik_network
+
+networks:
+  monitoring_network:
+    external: true
+  traefik_network:
+    external: true
+
+volumes:
+  alloy-data:
+  grafana-data:
+  loki-data:
+  prometheus-data:

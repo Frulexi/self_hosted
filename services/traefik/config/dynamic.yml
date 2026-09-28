@@ -1,0 +1,87 @@
+http:
+  serversTransports:
+    ignorecert:
+      insecureSkipVerify: true
+
+  routers:
+    unifi-gateway:
+      rule: "Host(`gateway.home.yourdomain.com`)"
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: cloudflare
+      service: unifi-gateway
+
+    proxmox:
+      rule: "Host(`proxmox.home.yourdomain.com`)"
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: cloudflare
+      service: proxmox
+
+    homeassistant:
+      rule: "Host(`ha.home.yourdomain.com`)"
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: cloudflare
+      service: homeassistant
+
+    apple-trans:
+      rule: "Host(`apple-trans.prod.yourdomain.com`)"
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: cloudflare
+      middlewares:
+        - sablier-apple-trans
+      service: apple-trans
+
+    hermes:
+      rule: "Host(`hermes.prod.yourdomain.com`) || Host(`hermes.home.yourdomain.com`)"
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: cloudflare
+      service: hermes
+
+  middlewares:
+    sablier-apple-trans:
+      plugin:
+        sablier:
+          group: apple-trans
+          sablierUrl: http://sablier:10000
+          sessionDuration: 5m
+          dynamic:
+            displayName: "appleTrans Service"
+            theme: hacker-terminal
+            refreshFrequency: 5s
+
+  services:
+    unifi-gateway:
+      loadBalancer:
+        serversTransport: ignorecert
+        servers:
+          - url: "https://192.168.1.1"
+
+    proxmox:
+      loadBalancer:
+        serversTransport: ignorecert
+        servers:
+          - url: "https://192.168.1.50:8006"
+
+    homeassistant:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.189:8123"
+
+    apple-trans:
+      loadBalancer:
+        servers:
+          - url: "http://apple-trans:8080"
+
+    hermes:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.225:8787"

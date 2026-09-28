@@ -1,0 +1,28 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest@sha256:643bd0be730d40f69d58028a55d1a896739333e8815786df42bc97f109ecbe61
+    container_name: homepage
+    restart: unless-stopped
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: "homepage.prod.yourdomain.com"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config:/app/config
+    networks:
+      - homepage_network
+      - traefik_network
+    labels:
+      com.homelab.service: "homepage"
+      com.homelab.maintainer: "homelab"
+      traefik.docker.network: traefik_network
+      traefik.enable: "true"
+      traefik.http.routers.homepage.entrypoints: "websecure"
+      traefik.http.routers.homepage.tls.certresolver: "cloudflare"
+      traefik.http.routers.homepage.rule: "Host(`homepage.prod.yourdomain.com`)"
+      traefik.http.services.homepage.loadbalancer.server.port: "3000"
+
+networks:
+  homepage_network:
+    external: true
+  traefik_network:
+    external: true

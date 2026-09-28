@@ -1,0 +1,36 @@
+# Services are auto-discovered from Docker container labels.
+# Add homepage.* labels to a container's docker-compose.yml for it to appear here.
+# Required labels:
+#   homepage.name: "My Service"
+#   homepage.description: "Short description"
+#   homepage.icon: "icon.png"        # see https://github.com/walkxcode/dashboard-icons
+#   homepage.group: "Group Name"     # must match a group defined in settings.yaml
+#   homepage.href: "https://service.prod.yourdomain.com"
+
+- Infrastructure:
+    - UniFi Gateway:
+        href: https://gateway.home.yourdomain.com
+        description: UniFi gateway management
+        icon: unifi.png
+    - Proxmox:
+        href: https://proxmox.home.yourdomain.com
+        description: Proxmox hypervisor
+        icon: proxmox.png
+    - Home Assistant:
+        href: https://ha.home.yourdomain.com
+        description: Home automation
+        icon: home-assistant.png
+
+- Agents:
+    - Hermes:
+        href: https://hermes.prod.yourdomain.com
+        description: Autonomous AI agent
+        icon: hermes.png
+    - Muse:
+        href: https://muse.ai
+        description: Personal AI agent
+        icon: muse.svg
+    - Gemini:
+        href: https://gemini.google.com
+        description: Google AI assistant
+        icon: google-gemini.png

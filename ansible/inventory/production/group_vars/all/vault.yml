@@ -1,0 +1,22 @@
+---
+# Ansible Vault Secrets Template
+# To encrypt this file, run: ansible-vault encrypt vault.yml
+# Define your sensitive environment variables and service credentials below.
+
+# Traefik & DNS
+vault_cf_dns_api_token: "your_cloudflare_dns_api_token_here"
+
+# Authentik IAM
+vault_authentik_secret_key: "generate_random_secret_key_here"
+vault_authentik_postgresql_password: "your_secure_postgres_password"
+
+# Snipe-IT ITAM
+vault_snipeit_app_key: "base64:your_generated_app_key_here"
+vault_snipeit_db_password: "your_secure_mysql_password"
+
+# Monitoring & Alerting
+vault_grafana_admin_password: "your_secure_admin_password"
+
+# Twingate Zero Trust
+vault_twingate_network: "your_twingate_network_name"
+vault_twingate_access_token: "your_twingate_service_key_token"
