@@ -1,0 +1,19 @@
+# Local netrc
+.netrc
+
+# Terraform state / files
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+*.tfvars.json
+
+# Local environment variables
+.env
+.env.*
+*.env
+
+# OS metadata
+.DS_Store
+Thumbs.db
